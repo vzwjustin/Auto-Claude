@@ -383,20 +383,94 @@ class SpecOrchestrator:
         self.validator = SpecValidator(self.spec_dir)
 
     def _create_spec_dir(self) -> Path:
-        """Create a new spec directory with incremented number."""
+        """Create a new spec directory with incremented number and placeholder name."""
         existing = list(self.specs_dir.glob("[0-9][0-9][0-9]-*"))
         next_num = len(existing) + 1
-
-        # Generate name from task description
-        if self.task_description:
-            # Convert to kebab-case
-            name = self.task_description.lower()
-            name = "".join(c if c.isalnum() or c == " " else "" for c in name)
-            name = "-".join(name.split()[:4])  # First 4 words
-        else:
-            name = "new-spec"
-
+        
+        # Start with placeholder - will be renamed after requirements gathering
+        name = "pending"
+        
         return self.specs_dir / f"{next_num:03d}-{name}"
+
+    def _generate_spec_name(self, task_description: str) -> str:
+        """Generate a clean kebab-case name from task description."""
+        # Common words to skip for cleaner names
+        skip_words = {
+            "a", "an", "the", "to", "for", "of", "in", "on", "at", "by", "with",
+            "and", "or", "but", "is", "are", "was", "were", "be", "been", "being",
+            "have", "has", "had", "do", "does", "did", "will", "would", "could",
+            "should", "may", "might", "must", "can", "this", "that", "these",
+            "those", "i", "you", "we", "they", "it", "add", "create", "make",
+            "implement", "build", "new", "using", "use", "via", "from",
+        }
+        
+        # Clean and tokenize
+        text = task_description.lower()
+        text = "".join(c if c.isalnum() or c == " " else " " for c in text)
+        words = text.split()
+        
+        # Filter out skip words and short words
+        meaningful = [w for w in words if w not in skip_words and len(w) > 2]
+        
+        # Take first 4 meaningful words
+        name_parts = meaningful[:4]
+        
+        if not name_parts:
+            # Fallback: just use first 4 words regardless
+            name_parts = words[:4]
+        
+        return "-".join(name_parts) if name_parts else "spec"
+
+    def _rename_spec_dir_from_requirements(self) -> bool:
+        """Rename spec directory based on requirements.json task description."""
+        requirements_file = self.spec_dir / "requirements.json"
+        
+        if not requirements_file.exists():
+            return False
+        
+        try:
+            with open(requirements_file) as f:
+                req = json.load(f)
+            
+            task_desc = req.get("task_description", "")
+            if not task_desc:
+                return False
+            
+            # Generate new name
+            new_name = self._generate_spec_name(task_desc)
+            
+            # Extract the number prefix from current dir
+            current_name = self.spec_dir.name
+            if current_name[:3].isdigit():
+                prefix = current_name[:4]  # "001-"
+            else:
+                prefix = ""
+            
+            new_dir_name = f"{prefix}{new_name}"
+            new_spec_dir = self.spec_dir.parent / new_dir_name
+            
+            # Don't rename if it's already a good name (not "pending")
+            if "pending" not in current_name:
+                return True
+            
+            # Don't rename if target already exists
+            if new_spec_dir.exists():
+                return True
+            
+            # Rename the directory
+            import shutil
+            shutil.move(str(self.spec_dir), str(new_spec_dir))
+            
+            # Update our references
+            self.spec_dir = new_spec_dir
+            self.validator = SpecValidator(self.spec_dir)
+            
+            print_status(f"Spec folder: {highlight(new_dir_name)}", "success")
+            return True
+            
+        except (json.JSONDecodeError, IOError, OSError) as e:
+            print_status(f"Could not rename spec folder: {e}", "warning")
+            return False
 
     def _run_script(self, script: str, args: list[str]) -> tuple[bool, str]:
         """Run a Python script and return (success, output)."""
@@ -1330,6 +1404,9 @@ Read the failed files, understand the errors, and fix them.
         if not result.success:
             print_status("Requirements gathering failed", "error")
             return False
+
+        # Rename spec folder with better name from requirements
+        self._rename_spec_dir_from_requirements()
 
         # === PHASE 3: AI COMPLEXITY ASSESSMENT ===
         result = await run_phase("complexity_assessment", self.phase_complexity_assessment_with_requirements)
