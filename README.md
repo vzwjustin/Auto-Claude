@@ -273,15 +273,6 @@ your-project/
 
 ## Documentation
 
-For complete documentation including:
-- Detailed architecture diagrams
-- Agent prompt specifications
-- Security model details
-- Configuration options
-- Troubleshooting guide
-
-See [AUTO-BUILD-FRAMEWORK.md](AUTO-BUILD-FRAMEWORK.md)
-
 For parallel execution details:
 - How parallelism works
 - Performance analysis
