@@ -24,6 +24,12 @@ import {
 } from '../memory-service';
 import { validateOpenAIApiKey } from '../api-validation-service';
 import { findPythonCommand, parsePythonCommand } from '../python-detector';
+import {
+  flushOllamaProgressNdjsonBuffer,
+  parseOllamaProgressNdjsonChunk,
+  type NdjsonBufferRef,
+  type OllamaProgressData,
+} from '../ollama-progress-parser';
 
 /**
  * Ollama Service Status
@@ -571,7 +577,24 @@ export function registerMemoryHandlers(): void {
 
           let stdout = '';
           let stderr = '';
-          let stderrBuffer = ''; // Buffer for NDJSON parsing
+          const stderrBufferRef: NdjsonBufferRef = { current: '' };
+
+          const emitProgress = (progressData: OllamaProgressData): void => {
+            if (progressData.completed !== undefined && progressData.total !== undefined) {
+              const percentage = progressData.total > 0
+                ? Math.round((progressData.completed / progressData.total) * 100)
+                : 0;
+
+              // Emit progress event to renderer
+              event.sender.send(IPC_CHANNELS.OLLAMA_PULL_PROGRESS, {
+                modelName,
+                status: progressData.status || 'downloading',
+                completed: progressData.completed,
+                total: progressData.total,
+                percentage,
+              });
+            }
+          };
 
           proc.stdout.on('data', (data) => {
             stdout += data.toString();
@@ -580,42 +603,17 @@ export function registerMemoryHandlers(): void {
           proc.stderr.on('data', (data) => {
             const chunk = data.toString();
             stderr += chunk;
-            stderrBuffer += chunk;
-
             // Parse NDJSON (newline-delimited JSON) from stderr
             // Ollama sends progress data as: {"status":"downloading","completed":X,"total":Y}
-            const lines = stderrBuffer.split('\n');
-            // Keep the last incomplete line in the buffer
-            stderrBuffer = lines.pop() || '';
-
-            lines.forEach((line) => {
-              if (line.trim()) {
-                try {
-                  const progressData = JSON.parse(line);
-                  
-                  // Extract progress information
-                  if (progressData.completed !== undefined && progressData.total !== undefined) {
-                    const percentage = progressData.total > 0 
-                      ? Math.round((progressData.completed / progressData.total) * 100) 
-                      : 0;
-
-                    // Emit progress event to renderer
-                    event.sender.send(IPC_CHANNELS.OLLAMA_PULL_PROGRESS, {
-                      modelName,
-                      status: progressData.status || 'downloading',
-                      completed: progressData.completed,
-                      total: progressData.total,
-                      percentage,
-                    });
-                  }
-                } catch {
-                  // Skip lines that aren't valid JSON
-                }
-              }
+            parseOllamaProgressNdjsonChunk(chunk, stderrBufferRef).forEach((progressData) => {
+              emitProgress(progressData);
             });
           });
 
           proc.on('close', (code) => {
+            flushOllamaProgressNdjsonBuffer(stderrBufferRef).forEach((progressData) => {
+              emitProgress(progressData);
+            });
             if (code === 0 && stdout) {
               try {
                 const result = JSON.parse(stdout);
