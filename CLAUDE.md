@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Repo / Branch Policy (NO EXCEPTIONS)
+
+- **Remote:** Always treat `https://github.com/vzwjustin/Auto-Claude.git` as the authoritative remote.
+- **Branch:** Always work on and push to **`develop`**.
+- **Do not push to upstream:** Never push to `AndyMik90/Auto-Claude` (the `origin` remote in some local clones).
+- **Do not create PRs to upstream:** All changes must land in **`vzwjustin/develop`**.
+
 ## Project Overview
 
 Auto Claude is a multi-agent autonomous coding framework that builds software through coordinated AI agent sessions. It uses the Claude Agent SDK to run agents in isolated workspaces with security controls.
@@ -250,20 +257,9 @@ main (user's branch)
 
 ### Contributing to Upstream
 
-**CRITICAL: When submitting PRs to AndyMik90/Auto-Claude, always target the `develop` branch, NOT `main`.**
+**Do not contribute to upstream from this repo clone.**
 
-**Correct workflow for contributions:**
-1. Fetch upstream: `git fetch upstream`
-2. Create feature branch from upstream/develop: `git checkout -b fix/my-fix upstream/develop`
-3. Make changes and commit with sign-off: `git commit -s -m "fix: description"`
-4. Push to your fork: `git push origin fix/my-fix`
-5. Create PR targeting `develop`: `gh pr create --repo AndyMik90/Auto-Claude --base develop`
-
-**Verify before PR:**
-```bash
-# Ensure only your commits are included
-git log --oneline upstream/develop..HEAD
-```
+All work in this repository must be pushed to **`vzwjustin/develop`** only.
 
 ### Security Model
 
