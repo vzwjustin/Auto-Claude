@@ -1,4 +1,4 @@
-# Cursor Instructions
+# Antigravity Instructions
 
 ## Repo / Branch Policy (NO EXCEPTIONS)
 
@@ -9,6 +9,6 @@
 
 ### Git behavior
 
-- If `origin` points to `AndyMik90/Auto-Claude`, do not push to it.
+- If the clone has an `origin` remote pointing to `AndyMik90/Auto-Claude`, do not use it for pushes.
 - Ensure local `user/justin` tracks `vzwjustin/user/justin`.
 - All changes must be committed and pushed to `vzwjustin/user/justin` only.

@@ -3,16 +3,16 @@
 ## Repo / Branch Policy (NO EXCEPTIONS)
 
 - **Authoritative remote:** `https://github.com/vzwjustin/Auto-Claude.git`
-- **Authoritative branch:** `develop`
+- **Authoritative branch:** `user/justin`
 - **Default:** do not push to or create PRs against `AndyMik90/Auto-Claude`.
 - **Exception:** only push to / create PRs against `AndyMik90/Auto-Claude` when the user explicitly requests it.
 
 ### Git expectations
 
-- The local branch `develop` should track `vzwjustin/develop`.
+- The local branch `user/justin` should track `vzwjustin/user/justin`.
 - If a local clone has `origin` pointing to `AndyMik90/Auto-Claude`, do not use it for pushes.
 
 ### Default behavior
 
-- All changes must be committed and pushed to `vzwjustin/develop` only.
+- All changes must be committed and pushed to `vzwjustin/user/justin` only.
 - If a task would require pushing elsewhere, stop and ask for clarification.

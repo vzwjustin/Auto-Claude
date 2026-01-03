@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repo / Branch Policy (NO EXCEPTIONS)
 
 - **Remote:** Always treat `https://github.com/vzwjustin/Auto-Claude.git` as the authoritative remote.
-- **Branch:** Always work on and push to **`develop`**.
+- **Branch:** Always work on and push to **`user/justin`**.
 - **Upstream default:** Do not push to or create PRs against `AndyMik90/Auto-Claude` (the `origin` remote in some local clones).
 - **Upstream exception:** Only push to / create PRs against `AndyMik90/Auto-Claude` when the user explicitly requests it.
 
@@ -257,7 +257,7 @@ main (user's branch)
 
 ### Contributing to Upstream
 
-**Default:** All work in this repository should be pushed to **`vzwjustin/develop`**.
+**Default:** All work in this repository should be pushed to **`vzwjustin/user/justin`**.
 
 **Exception:** Only contribute to upstream (`AndyMik90/Auto-Claude`) when the user explicitly requests it.
 
